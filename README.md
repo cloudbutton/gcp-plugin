@@ -6,20 +6,18 @@ Cloudbutton toolkit plugin for Google Functions and Google Cloud Storage
 
 ### GCP Account Setup
 
- 1. [Login](https://console.cloud.google.com) to Google Cloud Console (or signup if you don't have an account)
+ 1. [Login](https://console.cloud.google.com) to Google Cloud Console (or signup if you don't have an account).
  2. Create a new project. Name it `cloudbutton` or similar.
- 3. Navigate through the main menu on the top left corner to *IAM & Admin* > *Service Accounts*.
- 4. Click on *Create Service Account*.
- 5. Name the service account `cloudbutton-invoker` or similar. Then click on *Create*
+ 3. Navigate to *IAM & Admin* > *Service Accounts*.
+ 4. Click on *Create Service Account*. Name the service account `cloudbutton-executor` or similar. Then click on *Create*.
  6. Add the following roles to the service account:
 	 - Service Account User
 	 - Cloud Functions Developer
 	 - Pub/Sub Publisher
 	 - Storage Object Creator
- 7. Then click on *Continue*
- 8. Click on *Create key*. Select *JSON* and then *Create*. Download the JSON file to a secure location in you computer.
- 9. Click *Done*
- 10. Navigate to *Storage* on the menu. Create a bucket and name it `cloudbutton-data` or similar.
+ 7. Click on *Continue*. Then, click on *Create key*. Select *JSON* and then *Create*. Download the JSON file to a secure location in you computer. Click *Done*.
+ 8. Navigate to *Storage* on the menu. Create a bucket and name it `cloudbutton-data` or similar.
+
 **Note:**  If you don't have access to create new projects or service accounts, ask your account admin to do it for you.
 
 ### Local Configuration
@@ -35,9 +33,9 @@ gcp:
 ```
 
  - `project_name`: Project name introduced in step 2 (e.g. `cloudbutton`)
- - `service_account`: Service account email of the service account created on step 4 (e.g. `cloudbutton-invoker@cloudbutton.iam.gserviceaccount.com`)
- - `credentials_path`: **Absolute** path of your JSON key file downloaded in step 8 (e.g. `/home/myuser/cloudbutton-invoker123456789.json`)
- - `region`: Region of the bucket created at step 10. Functions and pub/sub queue will be created in the same region (e.g. `us-east-1`)
+ - `service_account`: Service account email of the service account created on step 4 (e.g. `cloudbutton-executor@cloudbutton.iam.gserviceaccount.com`)
+ - `credentials_path`: **Absolute** path of your JSON key file downloaded in step 7 (e.g. `/home/myuser/cloudbutton-invoker1234567890.json`)
+ - `region`: Region of the bucket created at step 8. Functions and pub/sub queue will be created in the same region (e.g. `us-east-1`)
 
 ### Usage
 
