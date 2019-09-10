@@ -62,6 +62,8 @@ class StorageBackend():
                 done = True
             except TooManyConnectionsError:
                 time.sleep(0.25)
+            except google.api_core.exceptions.NotFound:
+                raise StorageNoSuchKeyError(bucket=bucket_name, key=key)
 
     def get_object(self, bucket_name, key, stream=False, extra_get_args={}):
         """
@@ -70,12 +72,14 @@ class StorageBackend():
         :return: Data of the object
         :rtype: str/bytes
         """
-
-        bucket = self.client.get_bucket(bucket_name)
-        blob = bucket.blob(blob_name=key)
+        try:
+            bucket = self.client.get_bucket(bucket_name)
+            blob = bucket.blob(blob_name=key)
+        except google.api_core.exceptions.NotFound:
+            raise StorageNoSuchKeyError(bucket_name, key)
         
         if not blob.exists():
-            raise StorageNoSuchKeyError(key)
+            raise StorageNoSuchKeyError(bucket_name, key)
         
         if extra_get_args and 'range' in extra_get_args:
             start, end = re.findall(r'\d+', extra_get_args['range'])
@@ -101,21 +105,21 @@ class StorageBackend():
         :rtype: str/bytes
         """
         try:
-            client = self.client
-            bucket = client.get_bucket(bucket_name)
+            bucket = self.client.get_bucket(bucket_name)
             blob = bucket.get_blob(blob_name=key)
-            response = {
-                'LastModified' : blob.updated,
-                'ETag' : blob.etag, 
-                'content-type' : blob.content_type,
-                'content-length' : blob.size  
-            }
-            return response
-        except google.api_core.exceptions.ClientError as e:
-            if NotFound:
-                raise StorageNoSuchKeyError(key)
-            else:
-                raise e
+        except google.api_core.exceptions.NotFound:
+            raise StorageNoSuchKeyError(bucket_name, key)
+        
+        if blob is None:
+            raise StorageNoSuchKeyError(bucket_name, key)
+
+        response = {
+            'LastModified' : blob.updated,
+            'ETag' : blob.etag, 
+            'content-type' : blob.content_type,
+            'content-length' : blob.size  
+        }
+        return response
 
     def delete_object(self, bucket_name, key):
         """
@@ -125,14 +129,13 @@ class StorageBackend():
         """
         
         try:
-            client = self.client
-            bucket = client.get_bucket(bucket_name)
-            bucket.delete_blob(key)
-        except google.api_core.exceptions.ClientError as e:
-            if NotFound:
-                raise StorageNoSuchKeyError(key)
-            else:
-                raise e
+            bucket = self.client.get_bucket(bucket_name)
+        except google.api_core.exceptions.NotFound:
+            raise StorageNoSuchKeyError(bucket_name, key)
+        blob = bucket.get_blob(blob_name=key)
+        if blob is None:
+            raise StorageNoSuchKeyError(bucket_name, key)
+        blob.delete()
 
     def delete_objects(self, bucket_name, key_list):
         """
@@ -140,43 +143,40 @@ class StorageBackend():
         :param bucket: bucket name
         :param key_list: list of keys
         """
-        #TODO: exceptions
-        result = []
-        for key in key_list:
-            self.delete_object(bucket_name, key)
-        return result
-        #! result.append(self.delete...)
+        bucket = self.client.get_bucket(bucket_name)
+        try:
+            bucket.delete_blobs(blobs=key_list)
+        except google.api_core.exceptions.NotFound:
+            raise StorageNoSuchKeyError(bucket_name, '*')
 
     def bucket_exists(self, bucket_name):
+        """
+        Head bucket from COS with a name. Throws StorageNoSuchKeyError if the given bucket does not exist.
+        :param bucket_name: name of the bucket
+        """
         try:
-            client = self.client
-            client.get_bucket(bucket_name)
-        except google.api_core.exceptions.ClientError as e:
-            if NotFound:
-                raise StorageNoSuchKeyError(bucket_name)
-            else:
-                raise e
+            self.client.get_bucket(bucket_name)
+        except google.api_core.exceptions.NotFound:
+            raise StorageNoSuchKeyError(bucket_name, '')
+    
+    def head_bucket(self, bucket_name):
+        pass
 
     def list_objects(self, bucket_name, prefix=None):
-        
+        """
+        Return a list of objects for the given bucket and prefix.
+        :param bucket_name: Name of the bucket.
+        :param prefix: Prefix to filter object names.
+        :return: List of objects in bucket that match the given prefix.
+        :rtype: list of str
+        """
         try:
-            page_iterator = self.client.get_bucket(bucket_name).list_blobs(prefix=prefix)
-            object_list = []
-            for page in page_iterator:
-                object_list.append({
-                    'Key' : page.name, 
-                    'LastModified' : page.updated,
-                    'ETag' : page.etag,
-                    'Size' : page.size, 
-                    'StorageClass' : page.storage_class})
-            return object_list
-        except google.api_core.exceptions.ClientError as e:
-            if NotFound:
-                raise StorageNoSuchKeyError(bucket_name)
-            else:
-                raise e
+            page = self.client.get_bucket(bucket_name).list_blobs(prefix=prefix)
+        except google.api_core.exceptions.ClientError:
+            raise StorageNoSuchKeyError(bucket_name, '')
+        return [{'Key' : blob.name, 'Size' : blob.size} for blob in page]
     
-    def list_keys_with_prefix(self, bucket_name, prefix):
+    def list_keys(self, bucket_name, prefix=None):
         """
         Return a list of keys for the given prefix.
         :param prefix: Prefix to filter object names.
@@ -185,13 +185,7 @@ class StorageBackend():
         """
 
         try:
-            page_iterator = self.client.get_bucket(bucket_name).list_blobs(prefix=prefix)
-            key_list = []
-            for page in page_iterator:
-                key_list.append(page.name)
-            return key_list
-        except google.api_core.exceptions.ClientError as e:
-            if NotFound:
-                raise StorageNoSuchKeyError(bucket_name)
-            else:
-                raise e
+            page = self.client.get_bucket(bucket_name).list_blobs(prefix=prefix)
+        except google.api_core.exceptions.ClientError:
+            raise StorageNoSuchKeyError(bucket_name, '')
+        return [blob.name for blob in page]
