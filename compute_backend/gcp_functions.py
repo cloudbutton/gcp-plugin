@@ -9,6 +9,7 @@ import zipfile
 import time
 import random
 import tempfile
+import textwrap
 from google.cloud import pubsub_v1
 from google.oauth2 import service_account
 from google_auth_httplib2 import AuthorizedHttp
@@ -38,7 +39,7 @@ PUBSUB_API_VERSION = 'v1'
 AUDIENCE = "https://pubsub.googleapis.com/google.pubsub.v1.Publisher"
 
 
-class ComputeBackend:
+class GCPFunctionsBackend:
 
     def __init__(self, gcp_functions_config):
         self.log_level = os.getenv('PYWREN_LOG_LEVEL')
@@ -276,10 +277,24 @@ class ComputeBackend:
         return runtime_key
 
     def generate_runtime_meta(self, runtime_name):
-        module_location = os.path.dirname(os.path.abspath(__file__))
-        action_location = os.path.join(module_location, 'extract_preinstalls_fn.py')
-        modules_zip_action = os.path.join(tempfile.gettempdir(), 'extract_preinstalls_fn.zip')
+        action_code = """
+            import sys
+            import pkgutil
+            import json
 
+            def main(request):
+                runtime_meta = dict()
+                mods = list(pkgutil.iter_modules())
+                runtime_meta['preinstalls'] = [entry for entry in sorted([[mod, is_pkg] for _, mod, is_pkg in mods])]
+                python_version = sys.version_info
+                runtime_meta['python_ver'] = str(python_version[0])+"."+str(python_version[1])
+                return json.dumps(runtime_meta)
+        """
+        action_location = os.path.join(tempfile.gettempdir(), 'extract_preinstalls_gcp.py')
+        with open(action_location, 'w') as f:
+            f.write(textwrap.dedent(action_code))
+
+        modules_zip_action = os.path.join(tempfile.gettempdir(), 'extract_preinstalls_gcp.zip')
         with zipfile.ZipFile(modules_zip_action, 'w') as extract_modules_zip:
             extract_modules_zip.write(action_location, 'main.py')
             extract_modules_zip.close()

@@ -1,1 +1,1 @@
-from .gcp_functions import ComputeBackend
+from .gcp_functions import GCPFunctionsBackend as ComputeBackend
