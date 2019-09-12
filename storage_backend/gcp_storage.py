@@ -30,7 +30,7 @@ from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import GoogleAPICallError, AlreadyExists, RetryError
 from ...utils import StorageNoSuchKeyError
 
-class StorageBackend():
+class GCPStorageBackend():
     def __init__(self, gcp_storage_config):
         self.credentials_path = gcp_storage_config['credentials_path']
         try:
@@ -81,8 +81,8 @@ class StorageBackend():
         if not blob.exists():
             raise StorageNoSuchKeyError(bucket_name, key)
         
-        if extra_get_args and 'range' in extra_get_args:
-            start, end = re.findall(r'\d+', extra_get_args['range'])
+        if extra_get_args and 'Range' in extra_get_args:
+            start, end = re.findall(r'\d+', extra_get_args['Range'])
             start = int(start)
             end = int(end)
         else:
@@ -150,10 +150,6 @@ class StorageBackend():
             raise StorageNoSuchKeyError(bucket_name, '*')
 
     def bucket_exists(self, bucket_name):
-        """
-        Head bucket from COS with a name. Throws StorageNoSuchKeyError if the given bucket does not exist.
-        :param bucket_name: name of the bucket
-        """
         try:
             self.client.get_bucket(bucket_name)
         except google.api_core.exceptions.NotFound:
@@ -185,7 +181,7 @@ class StorageBackend():
         """
 
         try:
-            page = self.client.get_bucket(bucket_name).list_blobs(prefix=prefix)
+            page = list(self.client.get_bucket(bucket_name).list_blobs(prefix=prefix))
         except google.api_core.exceptions.ClientError:
             raise StorageNoSuchKeyError(bucket_name, '')
         return [blob.name for blob in page]
