@@ -6,6 +6,7 @@ from pywren_ibm_cloud import config
 RUNTIME_TIMEOUT_DEFAULT = 540 # 540 s == 9 min
 RUNTIME_MEMORY_DEFAULT = 256 # 256 MB
 RUNTIME_MEMORY_MAX = 2048 # 2048 MB
+RUNTIME_MEMORY_OPTIONS = [128, 256, 1024, 2048]
 
 def load_config(config_data=None):
     if 'runtime_memory' not in config_data['pywren']:
@@ -14,6 +15,9 @@ def load_config(config_data=None):
         config_data['pywren']['runtime_timeout'] = RUNTIME_TIMEOUT_DEFAULT
     if 'runtime' not in config_data['pywren']:
         config_data['pywren']['runtime'] = 'python'+version_str(sys.version_info)
+
+    if config_data['pywren']['runtime_memory'] not in RUNTIME_MEMORY_OPTIONS:
+        raise Exception('{} MB runtime is not available')
     
     if config_data['pywren']['runtime_memory'] > RUNTIME_MEMORY_MAX:
         config_data['pywren']['runtime_memory'] = RUNTIME_MEMORY_MAX

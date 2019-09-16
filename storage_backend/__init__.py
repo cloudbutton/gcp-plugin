@@ -1,1 +1,1 @@
-from .gcp_storage import StorageBackend
+from .gcp_storage import GCPStorageBackend as StorageBackend

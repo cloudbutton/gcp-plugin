@@ -189,11 +189,11 @@ class GCPFunctionsBackend:
             self.publisher_client.get_topic(topic_location) # Try getting topic config # pylint: disable=no-member
             # If no exception is raised, then the topic exists
             logger.info("Topic {} already exists - Restarting queue...".format(topic_location))
-            self.publisher_client.detele_topic(topic_location) # pylint: disable=no-member
+            self.publisher_client.delete_topic(topic_location)
         except google.api_core.exceptions.GoogleAPICallError:
             pass
         logger.debug("Creating topic {}...".format(topic_location))
-        self.publisher_client.create_topic(topic_location) # pylint: disable=no-member
+        self.publisher_client.create_topic(topic_location)
 
         # Create function
         self._create_handler_zip()
