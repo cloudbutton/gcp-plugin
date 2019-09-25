@@ -29,13 +29,14 @@ from google.cloud import storage
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import GoogleAPICallError, AlreadyExists, RetryError
 from ...utils import StorageNoSuchKeyError
+from pywren_ibm_cloud.utils import is_remote_cluster
 
 class GCPStorageBackend():
     def __init__(self, gcp_storage_config):
         self.credentials_path = gcp_storage_config['credentials_path']
-        try:
+        if not is_remote_cluster(): # Get credenitals from JSON file
             self.client = storage.Client.from_service_account_json(self.credentials_path)
-        except FileNotFoundError:
+        else: # Get credentials from gcp function environment
             self.client = storage.Client()
 
     def get_client(self):
