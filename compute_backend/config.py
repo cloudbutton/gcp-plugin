@@ -1,6 +1,6 @@
 import sys
 from os.path import exists, isfile
-from pywren_ibm_cloud.utils import version_str
+from pywren_ibm_cloud.utils import version_str, is_remote_cluster
 from pywren_ibm_cloud import config
 
 RUNTIME_TIMEOUT_DEFAULT = 540 # 540 s == 9 min
@@ -44,8 +44,9 @@ def load_config(config_data=None):
         raise Exception("'project_name', 'service_account' and 'credentials_path' \
         are mandatory under 'gcp' section")
 
-    if not exists(config_data['gcp']['credentials_path']) or not isfile(config_data['gcp']['credentials_path']):
-        raise Exception("Path {} must be credentials JSON file.".format(config_data['gcp']['credentials_path']))
+    if not is_remote_cluster() and (not exists(config_data['gcp']['credentials_path']) \
+            or not isfile(config_data['gcp']['credentials_path'])):
+            raise Exception("Path {} must be credentials JSON file.".format(config_data['gcp']['credentials_path']))
     
     config_data['gcp_functions'] = config_data['gcp'].copy()
     if 'region' not in config_data['gcp_functions']:
