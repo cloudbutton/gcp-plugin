@@ -15,7 +15,7 @@
 import logging
 import json
 import base64
-from pywren_ibm_cloud.runtime.function_handler.handler import function_handler
+from pywren_ibm_cloud.function.handler import function_handler
 from pywren_ibm_cloud.config import cloud_logging_config
 
 cloud_logging_config(logging.INFO)

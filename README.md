@@ -12,11 +12,11 @@ Cloudbutton toolkit plugin for Google Functions and Google Cloud Storage
  4. Click on *Create Service Account*. Name the service account `cloudbutton-executor` or similar. Then click on *Create*.
  6. Add the following roles to the service account:
 	 - Service Account User
-	 - Cloud Functions Developer
-	 - Pub/Sub Publisher
-	 - Storage Object Creator
+	 - Cloud Functions Admin
+	 - Pub/Sub Admin
+	 - Storage Admin
  7. Click on *Continue*. Then, click on *Create key*. Select *JSON* and then *Create*. Download the JSON file to a secure location in you computer. Click *Done*.
- 8. Navigate to *Storage* on the menu. Create a bucket and name it `cloudbutton-data` or similar.
+ 8. Navigate to *Storage* on the menu. Create a bucket and name it `cloudbutton-data` or similar. Remember to update the corresponding PyWren's config field with this bucket name.
 
 **Note:**  If you don't have access to create new projects or service accounts, ask your account admin to do it for you.
 
@@ -35,7 +35,7 @@ gcp:
  - `project_name`: Project name introduced in step 2 (e.g. `cloudbutton`)
  - `service_account`: Service account email of the service account created on step 4 (e.g. `cloudbutton-executor@cloudbutton.iam.gserviceaccount.com`)
  - `credentials_path`: **Absolute** path of your JSON key file downloaded in step 7 (e.g. `/home/myuser/cloudbutton-invoker1234567890.json`)
- - `region`: Region of the bucket created at step 8. Functions and pub/sub queue will be created in the same region (e.g. `us-east-1`)
+ - `region`: Region of the bucket created at step 8. Functions and pub/sub queue will be created in the same region (e.g. `us-east1`)
 
 ### Usage
 

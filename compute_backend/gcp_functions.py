@@ -22,7 +22,7 @@ import google.api_core.exceptions
 
 import pywren_ibm_cloud
 from pywren_ibm_cloud.version import __version__
-from pywren_ibm_cloud.utils import version_str, is_remote_cluster
+from pywren_ibm_cloud.utils import version_str
 from pywren_ibm_cloud import config
 from pywren_ibm_cloud.storage.storage import InternalStorage
 
@@ -58,13 +58,13 @@ class GCPFunctionsBackend:
         self.internal_storage = InternalStorage(gcp_functions_config['storage'])
 
         # Setup pubsub client
-        if not is_remote_cluster(): # Get credenitals from JSON file
+        try: # Get credenitals from JSON file
             service_account_info = json.load(open(self.credentials_path))
             credentials = jwt.Credentials.from_service_account_info(
                 service_account_info, audience=AUDIENCE
             )
             credentials_pub = credentials.with_claims(audience=AUDIENCE)
-        else: # Get credentials from gcp function environment
+        except Exception: # Get credentials from gcp function environment
             credentials_pub = None
         self.publisher_client = pubsub_v1.PublisherClient(credentials=credentials_pub)
 
