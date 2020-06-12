@@ -1,8 +1,8 @@
 # CloudButton Google Cloud Platform Plugin
 Cloudbutton toolkit plugin for Google Functions and Google Cloud Storage
 
-- CloudButton Project: [http://cloudbutton.eu/](http://cloudbutton.eu/)
-- CloudButton Toolkit: [https://github.com/pywren/pywren-ibm-cloud](https://github.com/pywren/pywren-ibm-cloud)
+- CloudButton Project Site: [http://cloudbutton.eu/](http://cloudbutton.eu/)
+- CloudButton Toolkit Github: [https://github.com/cloudbutton/cloudbutton](https://github.com/cloudbutton/cloudbutton)
 
 ### GCP Account Setup
 
@@ -16,13 +16,13 @@ Cloudbutton toolkit plugin for Google Functions and Google Cloud Storage
 	 - Pub/Sub Admin
 	 - Storage Admin
  7. Click on *Continue*. Then, click on *Create key*. Select *JSON* and then *Create*. Download the JSON file to a secure location in you computer. Click *Done*.
- 8. Navigate to *Storage* on the menu. Create a bucket and name it `cloudbutton-data` or similar. Remember to update the corresponding PyWren's config field with this bucket name.
+ 8. Navigate to *Storage* on the menu. Create a bucket and name it `cloudbutton-data` or similar. Remember to update the corresponding Cloudbutton's config field with this bucket name.
 
 **Note:**  If you don't have access to create new projects or service accounts, ask your account admin to do it for you.
 
 ### Local Configuration
 
-Copy the following lines and add them to the local configuration file located in your home directory called `.pywren_config`
+Copy the following lines and add them to the local configuration file located in your home directory called `.cloudbutton_config`
 
 ```yaml
 gcp:
@@ -41,7 +41,7 @@ gcp:
 
 To use GCP functions, change the following lines of your local configuration file:
 ```yaml
-pywren:
+cloudbutton:
     compute_backend : 'gcp_functions'
     storage_backend: 'gcp_storage'
 ```
