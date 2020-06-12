@@ -17,18 +17,17 @@
 # under the License.
 #
 
-import google.auth
-import google.oauth2.service_account
 import re
 import io
 import time
 from requests.exceptions import SSLError as TooManyConnectionsError
 from io import BytesIO
 from urllib.parse import urlparse
+from google.api_core import exceptions as google_exceptions
 from google.cloud import storage
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import GoogleAPICallError, AlreadyExists, RetryError
-from ...utils import StorageNoSuchKeyError
+from ..utils import StorageNoSuchKeyError
 
 class GCPStorageBackend():
     def __init__(self, gcp_storage_config, bucket=None, executor_id=None):
@@ -61,8 +60,8 @@ class GCPStorageBackend():
                 blob.upload_from_string(data=data)
                 done = True
             except TooManyConnectionsError:
-                time.sleep(0.25)
-            except google.api_core.exceptions.NotFound:
+                time.sleep(0.1)
+            except google_exceptions.NotFound:
                 raise StorageNoSuchKeyError(bucket=bucket_name, key=key)
 
     def get_object(self, bucket_name, key, stream=False, extra_get_args={}):
@@ -75,7 +74,7 @@ class GCPStorageBackend():
         try:
             bucket = self.client.get_bucket(bucket_name)
             blob = bucket.blob(blob_name=key)
-        except google.api_core.exceptions.NotFound:
+        except google_exceptions.NotFound:
             raise StorageNoSuchKeyError(bucket_name, key)
         
         if not blob.exists():
@@ -107,7 +106,7 @@ class GCPStorageBackend():
         try:
             bucket = self.client.get_bucket(bucket_name)
             blob = bucket.get_blob(blob_name=key)
-        except google.api_core.exceptions.NotFound:
+        except google_exceptions.NotFound:
             raise StorageNoSuchKeyError(bucket_name, key)
         
         if blob is None:
@@ -130,7 +129,7 @@ class GCPStorageBackend():
         
         try:
             bucket = self.client.get_bucket(bucket_name)
-        except google.api_core.exceptions.NotFound:
+        except google_exceptions.NotFound:
             raise StorageNoSuchKeyError(bucket_name, key)
         blob = bucket.get_blob(blob_name=key)
         if blob is None:
@@ -146,13 +145,13 @@ class GCPStorageBackend():
         bucket = self.client.get_bucket(bucket_name)
         try:
             bucket.delete_blobs(blobs=key_list)
-        except google.api_core.exceptions.NotFound:
-            raise StorageNoSuchKeyError(bucket_name, '*')
+        except google_exceptions.NotFound:
+            pass
 
     def bucket_exists(self, bucket_name):
         try:
             self.client.get_bucket(bucket_name)
-        except google.api_core.exceptions.NotFound:
+        except google_exceptions.NotFound:
             raise StorageNoSuchKeyError(bucket_name, '')
     
     def head_bucket(self, bucket_name):
@@ -168,7 +167,7 @@ class GCPStorageBackend():
         """
         try:
             page = self.client.get_bucket(bucket_name).list_blobs(prefix=prefix)
-        except google.api_core.exceptions.ClientError:
+        except google_exceptions.ClientError:
             raise StorageNoSuchKeyError(bucket_name, '')
         return [{'Key' : blob.name, 'Size' : blob.size} for blob in page]
     
@@ -182,6 +181,6 @@ class GCPStorageBackend():
 
         try:
             page = list(self.client.get_bucket(bucket_name).list_blobs(prefix=prefix))
-        except google.api_core.exceptions.ClientError:
+        except google_exceptions.ClientError:
             raise StorageNoSuchKeyError(bucket_name, '')
         return [blob.name for blob in page]
