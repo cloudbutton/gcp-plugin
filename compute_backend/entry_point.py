@@ -15,8 +15,8 @@
 import logging
 import json
 import base64
-from pywren_ibm_cloud.function.handler import function_handler
-from pywren_ibm_cloud.config import cloud_logging_config
+from cloudbutton.engine.agent.handler import function_handler
+from cloudbutton.config import cloud_logging_config
 
 cloud_logging_config(logging.INFO)
 logger = logging.getLogger('__main__')

@@ -12,6 +12,6 @@ def load_config(config_data=None):
         "are mandatory under 'gcp' section")
 
     if 'region' not in config_data['gcp']:
-        config_data['gcp']['region'] = config_data['pywren']['compute_backend_region']
+        config_data['gcp']['region'] = config_data['cloudbutton']['compute_backend_region']
 
     config_data['gcp_storage'] = config_data['gcp'].copy()
