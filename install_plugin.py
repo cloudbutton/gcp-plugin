@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-foldersimport pywren_ibm_cloud
+import pywren_ibm_cloud
 import os
 import shutil
 
