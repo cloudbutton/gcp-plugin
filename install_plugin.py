@@ -14,32 +14,29 @@
 # limitations under the License.
 #
 
-import cloudbutton
+foldersimport pywren_ibm_cloud
 import os
 import shutil
 
-base_path = os.path.dirname(cloudbutton.__file__)
-source_path = os.path.dirname(__file__)
 
-gcp_functions_backend_path = os.path.join(os.path.join(base_path, 'engine', 'backends', 'compute'), 'gcp_functions')
-gcp_storage_backend_path = os.path.join(os.path.join(base_path, 'engine', 'backends', 'storage'), 'gcp_storage')
+storage_backends_dir = os.path.dirname(os.path.abspath(pywren_ibm_cloud.storage.__file__))
+compute_backends_dir = os.path.dirname(os.path.abspath(pywren_ibm_cloud.compute.__file__))
+dst_storage_backend_path = os.path.join(storage_backends_dir, 'backends', 'gcp_storage')
+dst_compute_backend_path = os.path.join(compute_backends_dir, 'backends', 'gcp_functions')
 
-try:
-    if os.path.exists(gcp_functions_backend_path) and os.path.isfile(gcp_functions_backend_path):
-        os.remove(gcp_functions_backend_path)
-    if os.path.exists(gcp_storage_backend_path) and os.path.isfile(gcp_storage_backend_path):
-        os.remove(gcp_storage_backend_path)
+if os.path.isdir(dst_storage_backend_path):
+    shutil.rmtree(dst_storage_backend_path)
+elif os.path.isfile(dst_storage_backend_path):
+    os.remove(dst_storage_backend_path)
 
-    if os.path.exists(gcp_functions_backend_path) and os.path.isdir(gcp_functions_backend_path):
-        shutil.rmtree(gcp_functions_backend_path)
-    if os.path.exists(gcp_storage_backend_path) and os.path.isdir(gcp_storage_backend_path):
-        shutil.rmtree(gcp_storage_backend_path)
+if os.path.isdir(dst_compute_backend_path):
+    shutil.rmtree(dst_compute_backend_path)
+elif os.path.isfile(dst_compute_backend_path):
+    os.remove(dst_compute_backend_path)
 
-    if not os.path.exists(gcp_functions_backend_path):
-        shutil.copytree(os.path.join(source_path, 'compute_backend'), gcp_functions_backend_path)
-    if not os.path.exists(gcp_storage_backend_path):
-        shutil.copytree(os.path.join(source_path, 'storage_backend'), gcp_storage_backend_path)
+current_location = os.path.dirname(os.path.abspath(__file__))
+src_storage_backend_path = os.path.join(current_location, 'gcp_storage')
+src_compute_backend_path = os.path.join(current_location, 'gcp_functions')
 
-    print('Done')
-except Exception as e:
-    print('Installation failed: {}'.format(e))
+shutil.copytree(src_storage_backend_path, dst_storage_backend_path)
+shutil.copytree(src_compute_backend_path, dst_compute_backend_path)
