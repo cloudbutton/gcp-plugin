@@ -16,8 +16,8 @@
 
 import sys
 from os.path import exists, isfile
-from cloudbutton.engine.utils import version_str
-from cloudbutton import config as cloudbutton_config
+from pywren_ibm_cloud.utils import version_str
+from pywren_ibm_cloud import config as pw_config
 
 RUNTIME_TIMEOUT_DEFAULT = 540  # 540 s == 9 min
 RUNTIME_MEMORY_DEFAULT = 256  # 256 MB
@@ -34,24 +34,24 @@ def load_config(config_data=None):
     if config_data is None:
         config_data = {}
 
-    if 'runtime_memory' not in config_data['cloudbutton']:
-        config_data['cloudbutton']['runtime_memory'] = RUNTIME_MEMORY_DEFAULT
-    if 'runtime_timeout' not in config_data['cloudbutton']:
-        config_data['cloudbutton']['runtime_timeout'] = RUNTIME_TIMEOUT_DEFAULT
-    if 'runtime' not in config_data['cloudbutton']:
-        config_data['cloudbutton']['runtime'] = 'python' + \
+    if 'runtime_memory' not in config_data['pywren']:
+        config_data['pywren']['runtime_memory'] = RUNTIME_MEMORY_DEFAULT
+    if 'runtime_timeout' not in config_data['pywren']:
+        config_data['pywren']['runtime_timeout'] = RUNTIME_TIMEOUT_DEFAULT
+    if 'runtime' not in config_data['pywren']:
+        config_data['pywren']['runtime'] = 'python' + \
             version_str(sys.version_info)
-    if 'workers' not in config_data['cloudbutton']:
-        config_data['cloudbutton']['workers'] = MAX_CONCURRENT_WORKERS
+    if 'workers' not in config_data['pywren']:
+        config_data['pywren']['workers'] = MAX_CONCURRENT_WORKERS
 
-    if config_data['cloudbutton']['runtime_memory'] not in RUNTIME_MEMORY_OPTIONS:
+    if config_data['pywren']['runtime_memory'] not in RUNTIME_MEMORY_OPTIONS:
         raise Exception('{} MB runtime is not available (Only {} MB)'.format(
-            config_data['cloudbutton']['runtime_memory'], RUNTIME_MEMORY_OPTIONS))
+            config_data['pywren']['runtime_memory'], RUNTIME_MEMORY_OPTIONS))
 
-    if config_data['cloudbutton']['runtime_memory'] > RUNTIME_MEMORY_MAX:
-        config_data['cloudbutton']['runtime_memory'] = RUNTIME_MEMORY_MAX
-    if config_data['cloudbutton']['runtime_timeout'] > RUNTIME_TIMEOUT_DEFAULT:
-        config_data['cloudbutton']['runtime_timeout'] = RUNTIME_TIMEOUT_DEFAULT
+    if config_data['pywren']['runtime_memory'] > RUNTIME_MEMORY_MAX:
+        config_data['pywren']['runtime_memory'] = RUNTIME_MEMORY_MAX
+    if config_data['pywren']['runtime_timeout'] > RUNTIME_TIMEOUT_DEFAULT:
+        config_data['pywren']['runtime_timeout'] = RUNTIME_TIMEOUT_DEFAULT
 
     if 'gcp' not in config_data:
         raise Exception("'gcp' section is mandatory in the configuration")
@@ -61,9 +61,9 @@ def load_config(config_data=None):
 
     # Put storage data into compute backend config dict entry
     storage_config = dict()
-    storage_config['cloudbutton'] = config_data['cloudbutton'].copy()
+    storage_config['pywren'] = config_data['pywren'].copy()
     storage_config['gcp_storage'] = config_data['gcp'].copy()
-    config_data['gcp']['storage'] = cloudbutton_config.extract_storage_config(
+    config_data['gcp']['storage'] = pw_config.extract_storage_config(
         storage_config)
 
     required_parameters_0 = ('project_name',

@@ -34,11 +34,10 @@ from googleapiclient.errors import HttpError
 from google.auth import jwt
 import google.api_core.exceptions
 
-import cloudbutton
-from cloudbutton.version import __version__
-from cloudbutton.engine.utils import version_str
-from cloudbutton import config
-from cloudbutton.engine.backends.storage import InternalStorage
+from pywren_ibm_cloud.version import __version__
+from pywren_ibm_cloud.utils import version_str
+from pywren_ibm_cloud.storage import InternalStorage
+from pywren_ibm_cloud.compute.utils import create_function_handler_zip
 
 logger = logging.getLogger(__name__)
 logging.getLogger('googleapiclient').setLevel(logging.CRITICAL)
@@ -47,7 +46,7 @@ logging.getLogger('google.auth.transport.requests').setLevel(logging.CRITICAL)
 logging.getLogger('google.cloud.pubsub_v1.publisher').setLevel(
     logging.CRITICAL)
 
-ZIP_LOCATION = os.path.join(tempfile.gettempdir(), 'cloudbutton_gcp.zip')
+ZIP_LOCATION = os.path.join(tempfile.gettempdir(), 'pywren_gcp.zip')
 SCOPES = ('https://www.googleapis.com/auth/cloud-platform',
           'https://www.googleapis.com/auth/pubsub')
 FUNCTIONS_API_VERSION = 'v1'
@@ -58,10 +57,10 @@ AUDIENCE = "https://pubsub.googleapis.com/google.pubsub.v1.Publisher"
 class GCPFunctionsBackend:
 
     def __init__(self, gcp_functions_config):
-        self.log_level = os.getenv('CLOUDBUTTON_LOGLEVEL')
+        self.log_active = logger.getEffectiveLevel() != logging.WARNING
         self.name = 'gcp_functions'
         self.gcp_functions_config = gcp_functions_config
-        self.package = 'cloudbutton_v'+__version__
+        self.package = 'pywren_v'+__version__
 
         self.region = gcp_functions_config['region']
         self.service_account = gcp_functions_config['service_account']
@@ -83,11 +82,11 @@ class GCPFunctionsBackend:
             credentials_pub = None
         self.publisher_client = pubsub_v1.PublisherClient(credentials=credentials_pub)
 
-        log_msg = 'Cloudbutton v{} init for GCP Functions - Project: {} - Region: {}'.format(
+        log_msg = 'PyWren v{} init for GCP Functions - Project: {} - Region: {}'.format(
             __version__, self.project, self.region)
         logger.info(log_msg)
 
-        if not self.log_level:
+        if not self.log_active:
             print(log_msg)
 
     def _format_action_name(self, runtime_name, runtime_memory):
@@ -127,35 +126,6 @@ class GCPFunctionsBackend:
 
     def _get_default_runtime_image_name(self):
         return 'python'+version_str(sys.version_info)
-
-    def _create_handler_zip(self):
-        logger.debug("Creating function \
-            handler zip in {}".format(ZIP_LOCATION))
-
-        def add_folder_to_zip(zip_file, full_dir_path, sub_dir=''):
-            for file in os.listdir(full_dir_path):
-                full_path = os.path.join(full_dir_path, file)
-                if os.path.isfile(full_path):
-                    zip_file.write(full_path, os.path.join(
-                        'cloudbutton', sub_dir, file), zipfile.ZIP_DEFLATED)
-                elif os.path.isdir(full_path) and '__pycache__' not in full_path:
-                    add_folder_to_zip(zip_file, full_path,
-                                      os.path.join(sub_dir, file))
-
-        try:
-            with zipfile.ZipFile(ZIP_LOCATION, 'w') as cloudbutton_zip:
-                current_location = os.path.dirname(os.path.abspath(__file__))
-                module_location = os.path.dirname(
-                    os.path.abspath(cloudbutton.__file__))
-                main_file = os.path.join(current_location, 'entry_point.py')
-                cloudbutton_zip.write(main_file, 'main.py', zipfile.ZIP_DEFLATED)
-                req_file = os.path.join(current_location, 'requirements.txt')
-                cloudbutton_zip.write(req_file, 'requirements.txt',
-                                 zipfile.ZIP_DEFLATED)
-                add_folder_to_zip(cloudbutton_zip, module_location)
-        except Exception as e:
-            raise Exception(
-                'Unable to create the {} package: {}'.format(ZIP_LOCATION, e))
 
     def _create_function(self, runtime_name, memory, code, timeout=60, trigger='HTTP'):
         logger.debug("Creating function {} - Memory: {} Timeout: {} Trigger: {}".format(
@@ -233,7 +203,7 @@ class GCPFunctionsBackend:
         self.publisher_client.create_topic(topic_location)
 
         # Create function
-        self._create_handler_zip()
+        create_function_handler_zip(ZIP_LOCATION, 'main.py', __file__)
         with open(ZIP_LOCATION, "rb") as action_zip:
             action_bin = action_zip.read()
 

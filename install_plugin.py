@@ -18,6 +18,7 @@ import pywren_ibm_cloud
 import os
 import shutil
 
+pywren_path = os.path.dirname(os.path.abspath(pywren_ibm_cloud.__file__))
 
 storage_backends_dir = os.path.dirname(os.path.abspath(pywren_ibm_cloud.storage.__file__))
 compute_backends_dir = os.path.dirname(os.path.abspath(pywren_ibm_cloud.compute.__file__))
@@ -40,3 +41,5 @@ src_compute_backend_path = os.path.join(current_location, 'gcp_functions')
 
 shutil.copytree(src_storage_backend_path, dst_storage_backend_path)
 shutil.copytree(src_compute_backend_path, dst_compute_backend_path)
+
+print('GCP plugin successfully installed in : {}'.format(pywren_path))
