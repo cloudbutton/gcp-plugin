@@ -17,14 +17,29 @@
 import logging
 import json
 import base64
-from cloudbutton.engine.agent.handler import function_handler
-from cloudbutton.config import cloud_logging_config
+import os
+import uuid
+from pywren_ibm_cloud.version import __version__
+from pywren_ibm_cloud.config import cloud_logging_config
+from pywren_ibm_cloud.function import function_handler
+from pywren_ibm_cloud.function import function_invoker
 
 cloud_logging_config(logging.INFO)
 logger = logging.getLogger('__main__')
 
+
 def main(event, context):
     logger.info("Starting GCP Functions function execution")
+    # TODO: Check if GCP has its own activation ID
+    act_id = str(uuid.uuid4()).replace('-', '')[:12]
+    os.environ['__PW_ACTIVATION_ID'] = act_id
     args = json.loads(base64.b64decode(event['data']).decode('utf-8'))
-    function_handler(args)
+    
+    if 'remote_invoker' in args:
+        logger.info("PyWren v{} - Starting invoker".format(__version__))
+        function_invoker(args)
+    else:
+        logger.info("PyWren v{} - Starting execution".format(__version__))
+        function_handler(args)
+
     return 'OK'
