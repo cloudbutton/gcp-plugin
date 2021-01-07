@@ -13,7 +13,7 @@ httplib2==0.18.0
 idna==2.8
 jmespath==0.9.4
 kafka-python==1.4.4
-lxml==4.3.1
+lxml==4.6.2
 pika==0.13.0
 python-dateutil==2.8.0
 redis==2.10.6
